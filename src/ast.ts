@@ -23,6 +23,12 @@ export type UnaryOp =
     | "NOT"
     | "MINUS";
 
+export type Value =
+    | { kind: "Num"; value: number }
+    | { kind: "Str"; value: string }
+    | { kind: "Bool"; value: boolean }
+    | { kind: "Nil" }
+
 export type Expr =
     | { kind: "Num"; value: number }
     | { kind: "Str"; value: string }
@@ -32,7 +38,7 @@ export type Expr =
     | { kind: "Unary"; op: UnaryOp; rhs: Expr }
     | { kind: "Binary"; op: BinaryOp; lhs: Expr; rhs: Expr }
     | { kind: "Group"; expr: Expr }
-    | { kind: "Call"; callee: Expr; args: Expr[] }; 
+    | { kind: "Call"; callee: Expr; args: Expr[] };
 
 export type Stmt =
     | { kind: "Let"; name: string; init: Expr | null }
@@ -45,31 +51,7 @@ export type Stmt =
     | { kind: "Fn"; name: string; params: string[]; body: Stmt }
     | { kind: "Return"; value?: Expr };
 
-export type RExpr =
-    | { kind: "Num"; value: number }
-    | { kind: "Str"; value: string }
-    | { kind: "Bool"; value: boolean }
-    | { kind: "Nil" }
-    | { kind: "Local"; slot: number }
-    | { kind: "Global"; name: string }
-    | { kind: "Unary"; op: UnaryOp; rhs: RExpr }
-    | { kind: "Binary"; op: BinaryOp; lhs: RExpr; rhs: RExpr }
-    | { kind: "Group"; expr: RExpr }
-    | { kind: "Call"; callee: RExpr; args: RExpr[] };
-    
-export type RStmt =
-    | { kind: "Let"; slot: number; init: RExpr | null }
-    | { kind: "AssignLocal"; slot: number; op: AssignOp; value: RExpr }
-    | { kind: "AssignGlobal"; name: string; op: AssignOp; value: RExpr }
-    | { kind: "Print"; expr: RExpr }
-    | { kind: "ExprStmt"; expr: RExpr }
-    | { kind: "Block"; stmts: RStmt[] }
-    | { kind: "If"; cond: RExpr; then: RStmt; otherwise?: RStmt }
-    | { kind: "While"; cond: RExpr; body: RStmt }
-    | { kind: "Fn"; name: string; params: string[]; body: RStmt }
-    | { kind: "Return"; value?: RExpr };
-
-export type RProgram = {
-    stmts: RStmt[];
+export type Program = {
+    stmts: Stmt[];
     localCount: number;
 };

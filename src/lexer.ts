@@ -1,6 +1,6 @@
 // the lexer has a Lexer class which returns a array of Token
 
-import {  KEYWORDS } from "./token";
+import { KEYWORDS } from "./token";
 import type { Token, TokenKind } from "./token";
 
 export class Lexer {
@@ -43,7 +43,7 @@ export class Lexer {
     }
 
     private isAtEnd(): boolean {
-        
+
         return this.pos >= this.src.length;
     }
 
@@ -98,7 +98,7 @@ export class Lexer {
 
                 while (i < this.src.length) {
                   const c = this.charAt(i);
-                
+
                   if (this.isNumber(c)) {
                     parts.push(c);
                     i++;
@@ -109,7 +109,7 @@ export class Lexer {
                     i++;
                     continue;
                   }
-              
+
                   break;
                 }
 
@@ -139,7 +139,7 @@ export class Lexer {
 
                 while (i < this.src.length) {
                   const c = this.charAt(i);
-                
+
                   if (this.isAlnum(c)) {
                     parts.push(c);
                     i++;
@@ -150,7 +150,7 @@ export class Lexer {
                 }
 
                 const _buf = parts.join("");
-                
+
                 const keywordKind = KEYWORDS[_buf];
 
                 out.push({
@@ -274,7 +274,10 @@ export class Lexer {
                     })
                     continue;
                 } else {
-                    continue;
+                    out.push({
+                        kind: "BANG",
+                        lexeme: "!",
+                    });
                 }
             }
 
@@ -362,6 +365,10 @@ export class Lexer {
             if (ch === ".") out.push({kind: "DOT", lexeme: "."});
 
             if (ch === ";") out.push({kind: "SEMICOLON", lexeme: ";"});
+            if (ch === ":") out.push({kind: "COLON", lexeme: ":"});
+
+            // if (ch === "|") out.push({kind: "SEMICOLON", lexeme: ";"}); ADD LATER
+
 
             if (ch == "#") {
                 let i = this.pos;
@@ -373,7 +380,7 @@ export class Lexer {
                         parts.push(c);
                     } else {
                         break;
-                    }   
+                    }
                 }
 
                 let _buf = parts.join("");
@@ -386,18 +393,3 @@ export class Lexer {
         return out;
     }
 }
-
-
-let src = String.raw`
-let x = 0;
-let name = "\t\"HEISENBERG\"\t";
-while (not x == 10) => {
-    x += 1; # python style comment #
-    print(x);
-}
-print("SAY MY NAME", name)
-`
-
-let yeetLexer: Lexer = new Lexer(src);
-
-console.log(yeetLexer.lex())
