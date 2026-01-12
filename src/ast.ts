@@ -1,3 +1,5 @@
+import { Env } from "./interp";
+
 export type AssignOp =
     | "ASSIGN"
     | "PLUS_ASSIGN"
@@ -28,6 +30,7 @@ export type Value =
     | { kind: "Str"; value: string }
     | { kind: "Bool"; value: boolean }
     | { kind: "Nil" }
+    | { kind: "Fn"; name: string | null; params: string[]; body: Stmt[]; closure: Env }
 
 export type Expr =
     | { kind: "Num"; value: number }
@@ -47,8 +50,9 @@ export type Stmt =
     | { kind: "Block"; stmts: Stmt[] }
     | { kind: "If"; cond: Expr; then: Stmt; otherwise?: Stmt }
     | { kind: "While"; cond: Expr; body: Stmt }
-    | { kind: "Fn"; name: string; params: string[]; body: Stmt }
-    | { kind: "Return"; value?: Expr };
+    | { kind: "Fn"; name: string | null; params: string[]; body: Stmt[] }
+    | { kind: "Return"; value?: Expr }
+    | { kind: "Export"; name: string }
 
 export type Program = {
     stmts: Stmt[];

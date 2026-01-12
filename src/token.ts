@@ -4,6 +4,7 @@ export const TK = {
   OR: "OR",
   NOT: "NOT",
   FUNC: "FUNC",
+  EXPORT: "EXPORT",
   WHILE: "WHILE",
   IF: "IF",
   ELSE: "ELSE",
@@ -67,4 +68,5 @@ export const KEYWORDS: Record<string, TokenKind> = {
   or: TK.OR,
   not: TK.NOT,
   func: TK.FUNC,
+  export: TK.EXPORT,
 };

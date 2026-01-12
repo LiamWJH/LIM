@@ -27,14 +27,25 @@ export class Env {
     }
 }
 
+export class Module {
+    env: Env;
+    exports = new Map<string, Value>();
+
+    constructor(public name: string, globalEnv: Env) {
+        this.env = new Env(globalEnv);
+    }
+}
+
 export class Runtime {
     i = 0;
     globalenv = new Env(null);
+    moduleenv: Module;
     env: Env;
 
     constructor() {
         this.globalenv = new Env(null);
-        this.env = this.globalenv;
+        this.moduleenv = new Module("main", this.globalenv);
+        this.env = this.moduleenv.env;
         // this.installNatives() LATER
     }
 
@@ -100,6 +111,23 @@ export class Runtime {
         }
     }
 
+    private isTruthy(c: Value): boolean {
+        switch (c.kind) {
+            case "Nil": { return false; }
+            case "Bool": { return c.value; }
+            default: { return true; }
+        }
+    }
+
+    private withEnv<T>(env: Env, fn: () => T): T {
+        const prev = this.env;
+        this.env = env;
+        try {
+            return fn();
+        } finally {
+            this.env = prev;
+        }
+    }
 
     private exec(stmt: Stmt) {
         switch (stmt.kind) {
@@ -142,10 +170,142 @@ export class Runtime {
             }
 
             case "Block": {
-                this.env
+                const blockEnv = new Env(this.env);
+                this.withEnv(blockEnv, () => {
+                    for (const s of stmt.stmts) this.exec(s);
+                })
+                return;
             }
+
+            case "Fn": {
+                const fnVal: Value = {
+                    kind: "Fn",
+                    name: stmt.name,
+                    params: stmt.params,
+                    body: stmt.body,
+                    closure: this.env
+                };
+
+                this.env.define(stmt.name!, fnVal);
+                return;
+            }
+
+            case "Export": {
+                const obj = this.moduleenv.env.get(stmt.name);
+                this.moduleenv.exports.set(stmt.name, obj);
+                return;
+            }
+
+            case "If": {
+                const condVal = this.eval(stmt.cond);
+
+                if (this.isTruthy(condVal)) {
+                    this.exec(stmt.then);
+                } else if (stmt.otherwise) {
+                    this.exec(stmt.otherwise);
+                }
+
+                return;
+            }
+
+            case "While": {
+                while (this.isTruthy(this.eval(stmt.cond))) {
+                    this.exec(stmt.body);
+                }
+                return;
+            }
+
+            default: { throw new Error("shitty syntax exec error bitch"); }
         }
     }
 
-    // eval for expr and Ident and assign. exec for stmt
+    private eval(expr: Expr): Value {
+        switch (expr.kind) {
+            case "Num":
+            return { kind: "Num", value: expr.value };
+
+            case "Str":
+            return { kind: "Str", value: expr.value };
+
+            case "Bool":
+            return { kind: "Bool", value: expr.value };
+
+            case "Nil":
+            return { kind: "Nil" };
+
+
+            case "Ident":
+            return this.env.get(expr.name);
+
+
+            case "Group":
+            return this.eval(expr.expr);
+
+            case "Unary": {
+                const rhs = this.eval(expr.rhs);
+
+                switch (expr.op) {
+                    case "MINUS":
+                        return this.opMul(rhs, this.toNum(-1));
+
+                    case "NOT":
+                        return this.toBool(!rhs);
+
+                    default:
+                        throw new Error(`Unknown unary operator`);
+                }
+            }
+
+            case "Binary": {
+                const left = this.eval(expr.lhs);
+                const right = this.eval(expr.rhs);
+
+                switch (expr.op) {
+                    case "PLUS":
+                        return this.opAdd(left, right);
+
+                    case "MINUS":
+                        return this.opSub(left, right);
+
+                    case "STAR":
+                        return this.opMul(left, right);
+
+                    case "SLASH":
+                        return this.opDiv(left, right);
+
+                    case "EQUAL":
+                        return this.toBool(left == right);
+
+                    case "NOTEQ":
+                        return this.toBool(left != right);
+
+                    case "LT":
+                        return this.toBool(left < right);
+
+                    case "LTE":
+                        return this.toBool(left <= right);
+
+                    case "GT":
+                        return this.toBool(left > right);
+
+                    case "GTE":
+                        return this.toBool(left >= right);
+
+                    default:
+                        throw new Error(`Unknown binary operator ${expr.op}`);
+                }
+            }
+
+            case "Call": {
+                const callee = this.eval(expr.callee);
+                const args = expr.args.map(a => this.eval(a));
+                return this.callValue(callee, args);
+            }
+
+            default: {
+                const _exhaustive: never = expr;
+                return _exhaustive;
+            }
+        }
+    }
 }

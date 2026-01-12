@@ -50,7 +50,7 @@ export class Parser {
     if (this.match(TK.IF)) return this.ifStmt();
     if (this.match(TK.WHILE)) return this.whileStmt();
     if (this.match(TK.LBRACE)) return this.blockStmtAlreadyOpened();
-    // You don't currently have RETURN in TokenKind; if you add it later, wire it here.
+    // If you add RETURN later, wire it here.
     return this.exprOrAssignStmt();
   }
 
@@ -79,12 +79,12 @@ export class Parser {
     }
     this.consume(TK.RPAREN, "Expected ')' after parameters.");
 
+    // IMPORTANT: Fn.body should be Stmt[], not a Block Stmt
     this.consume(TK.LBRACE, "Expected '{' before function body.");
-    const bodyBlock = this.blockStmtAlreadyOpened(); // returns Stmt {kind:"Block"...}
-    return { kind: "Fn", name: nameTok.lexeme, params, body: bodyBlock };
+    const body = this.blockStmtsAlreadyOpened(); // ✅ Stmt[]
+
+    return { kind: "Fn", name: nameTok.lexeme, params, body };
   }
-
-
 
   private ifStmt(): Stmt {
     this.consume(TK.LPAREN, "Expected '(' after 'if'.");
@@ -108,15 +108,27 @@ export class Parser {
     return { kind: "While", cond, body };
   }
 
+  // ---------------------
+  // Blocks
+  // ---------------------
+
+  // If you want a "Block" statement (for `{ ... }` in normal code)
   // Called when we've already consumed '{'
   private blockStmtAlreadyOpened(): Stmt {
+    const stmts = this.blockStmtsAlreadyOpened();
+    return { kind: "Block", stmts };
+  }
+
+  // The same block parser, but returns the raw Stmt[] (needed for Fn.body)
+  // Called when we've already consumed '{'
+  private blockStmtsAlreadyOpened(): Stmt[] {
     const stmts: Stmt[] = [];
     while (!this.check(TK.RBRACE) && !this.isAtEnd()) {
       const s = this.declaration();
       if (s) stmts.push(s);
     }
     this.consume(TK.RBRACE, "Expected '}' after block.");
-    return { kind: "Block", stmts };
+    return stmts;
   }
 
   /**
@@ -177,7 +189,7 @@ export class Parser {
     let expr = this.logicAnd();
     while (this.match(TK.OR)) {
       const rhs = this.logicAnd();
-      expr = { kind: "Binary", op: "OR", lhs: expr, rhs };
+      expr = { kind: "Binary", op: "OR" as unknown as BinaryOp, lhs: expr, rhs };
     }
     return expr;
   }
@@ -186,7 +198,7 @@ export class Parser {
     let expr = this.equality();
     while (this.match(TK.AND)) {
       const rhs = this.equality();
-      expr = { kind: "Binary", op: "AND", lhs: expr, rhs };
+      expr = { kind: "Binary", op: "AND" as unknown as BinaryOp, lhs: expr, rhs };
     }
     return expr;
   }
@@ -196,7 +208,7 @@ export class Parser {
     while (this.match(TK.EQUAL, TK.NOTEQ)) {
       const opTok = this.previous();
       const rhs = this.comparison();
-      const op: BinaryOp = opTok.kind === TK.EQUAL ? "EQUAL" : "NOTEQ";
+      const op = (opTok.kind === TK.EQUAL ? "EQUAL" : "NOTEQ") as unknown as BinaryOp;
       expr = { kind: "Binary", op, lhs: expr, rhs };
     }
     return expr;
@@ -207,11 +219,12 @@ export class Parser {
     while (this.match(TK.LT, TK.LTE, TK.GT, TK.GTE)) {
       const opTok = this.previous();
       const rhs = this.term();
-      const op: BinaryOp =
-        opTok.kind === TK.LT ? "LT" :
-        opTok.kind === TK.LTE ? "LTE" :
-        opTok.kind === TK.GT ? "GT" :
-        "GTE";
+      const op =
+        (opTok.kind === TK.LT ? "LT" :
+         opTok.kind === TK.LTE ? "LTE" :
+         opTok.kind === TK.GT ? "GT" :
+         "GTE") as unknown as BinaryOp;
+
       expr = { kind: "Binary", op, lhs: expr, rhs };
     }
     return expr;
@@ -222,7 +235,7 @@ export class Parser {
     while (this.match(TK.PLUS, TK.MINUS)) {
       const opTok = this.previous();
       const rhs = this.factor();
-      const op: BinaryOp = opTok.kind === TK.PLUS ? "PLUS" : "MINUS";
+      const op = (opTok.kind === TK.PLUS ? "PLUS" : "MINUS") as unknown as BinaryOp;
       expr = { kind: "Binary", op, lhs: expr, rhs };
     }
     return expr;
@@ -233,7 +246,7 @@ export class Parser {
     while (this.match(TK.STAR, TK.SLASH)) {
       const opTok = this.previous();
       const rhs = this.unary();
-      const op: BinaryOp = opTok.kind === TK.STAR ? "STAR" : "SLASH";
+      const op = (opTok.kind === TK.STAR ? "STAR" : "SLASH") as unknown as BinaryOp;
       expr = { kind: "Binary", op, lhs: expr, rhs };
     }
     return expr;
@@ -243,7 +256,7 @@ export class Parser {
     if (this.match(TK.NOT, TK.MINUS, TK.BANG)) {
       const opTok = this.previous();
       const rhs = this.unary();
-      const op: UnaryOp = opTok.kind === TK.MINUS ? "MINUS" : "NOT";
+      const op = (opTok.kind === TK.MINUS ? "MINUS" : "NOT") as unknown as UnaryOp;
       return { kind: "Unary", op, rhs };
     }
     return this.call();
@@ -289,7 +302,6 @@ export class Parser {
       return { kind: "Group", expr };
     }
 
-    // If you have true/false/nil as keywords later, add TK.TRUE/TK.FALSE/TK.NIL
     throw this.error(this.current(), "Expected expression.");
   }
 
@@ -327,21 +339,15 @@ export class Parser {
 
   private current(): Token {
     const tok = this.tokens[this.i];
-    if (!tok) {
-      throw new Error("Parser invariant violated: missing EOF token");
-    }
+    if (!tok) throw new Error("Parser invariant violated: missing EOF token");
     return tok;
   }
-
 
   private previous(): Token {
     const tok = this.tokens[this.i - 1];
-    if (!tok) {
-      throw new Error("Parser invariant violated: previous() before start");
-    }
+    if (!tok) throw new Error("Parser invariant violated: previous() before start");
     return tok;
   }
-
 
   private peek(): Token | undefined {
     return this.tokens[this.i + 1];
@@ -362,6 +368,9 @@ export class Parser {
         case TK.FUNC:
         case TK.IF:
         case TK.WHILE:
+          return; // ✅ important: stop syncing at a likely statement boundary
+        default:
+          break;
       }
 
       this.advance();
