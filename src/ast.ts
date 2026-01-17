@@ -1,3 +1,4 @@
+import type { Runtime } from "inspector/promises";
 import { Env } from "./interp";
 
 export type AssignOp =
@@ -25,12 +26,17 @@ export type UnaryOp =
     | "NOT"
     | "MINUS";
 
+
+export type NativeImpl = (args: Value[]) => Value;
+
+
 export type Value =
     | { kind: "Num"; value: number }
     | { kind: "Str"; value: string }
     | { kind: "Bool"; value: boolean }
     | { kind: "Nil" }
     | { kind: "Fn"; name: string | null; params: string[]; body: Stmt[]; closure: Env }
+    | { kind: "NativeFn"; name: string; arity: Number | null; impl: NativeImpl }
 
 export type Expr =
     | { kind: "Num"; value: number }

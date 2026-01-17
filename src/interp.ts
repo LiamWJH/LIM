@@ -1,5 +1,7 @@
 import type { TokenKind, Token } from "./token";
 import type { AssignOp, BinaryOp, Expr, Stmt, Program, Value } from "./ast";
+import { printFn, scanFn } from "./natives";
+
 
 export class Env {
     values = new Map<string, Value>();
@@ -27,6 +29,10 @@ export class Env {
     }
 }
 
+class ReturnSignal {
+    constructor(public value: Value) {};
+}
+
 export class Module {
     env: Env;
     exports = new Map<string, Value>();
@@ -46,7 +52,7 @@ export class Runtime {
         this.globalenv = new Env(null);
         this.moduleenv = new Module("main", this.globalenv);
         this.env = this.moduleenv.env;
-        // this.installNatives() LATER
+        this.installNatives();
     }
 
     run(program: Stmt[]) {
@@ -129,10 +135,53 @@ export class Runtime {
         }
     }
 
+    private callValue(callee: Value, args: Value[]): Value {
+        if (callee.kind === "NativeFn") {
+                if (callee.arity !== null && args.length !== callee.arity) {
+                    throw new Error(`native ${callee.name} expects ${callee.arity} args`);
+                }
+            return callee.impl(args);
+        }
+        if (callee.kind !== "Fn") {
+            throw new Error(`tried to call non-function value: ${callee.kind}`);
+        }
+
+        if (args.length !== callee.params.length) {
+            throw new Error(
+            `function ${callee.name ?? "<anon>"} expects ${callee.params.length} args but got ${args.length}`
+            );
+        }
+
+        const callEnv = new Env(callee.closure);
+
+        for (let i = 0; i < callee.params.length; i++) {
+            callEnv.define(callee.params[i]!, args[i]!);
+        }
+
+
+        try {
+            return this.withEnv(callEnv, () => {
+                for (const s of callee.body)
+                this.exec(s);
+                return this.toNil(null);
+            });
+        } catch (e) {
+            if (e instanceof ReturnSignal) return e.value;
+            throw e;
+        }
+    }
+
+
+
+    private installNatives() {
+        this.env.define("print", printFn);
+        this.env.define("scan", scanFn);
+    }
+
     private exec(stmt: Stmt) {
         switch (stmt.kind) {
             case "Let": {
-                const val = this.eval(stmt.init);
+                const val = this.eval(stmt.init!);
                 this.env.define(stmt.name, val);
                 return;
             }
@@ -213,6 +262,11 @@ export class Runtime {
                     this.exec(stmt.body);
                 }
                 return;
+            }
+
+            case "Return": {
+                const val = stmt.value ? this.eval(stmt.value) : this.toNil(null);
+                throw new ReturnSignal(val);
             }
 
             default: { throw new Error("shitty syntax exec error bitch"); }

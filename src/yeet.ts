@@ -1,6 +1,7 @@
 import { Lexer } from "./lexer";
 import { Parser } from "./parser";
 import { inspect } from "util";
+import { Runtime } from "./interp";
 
 
 const args =
@@ -29,11 +30,15 @@ if (!args[0]) {
     let yeetParser = new Parser(yeetTokens);
     let yeetAst = yeetParser.parseProgram();
 
-    
+    let yeetRuntime = new Runtime();
+    yeetRuntime.run(yeetAst);
+    /**
     console.log(inspect(yeetAst, {
         depth: null, // infinite depth
         colors: true,
         maxArrayLength: null,
         breakLength: Infinity
     }));
+     */
+
 }
