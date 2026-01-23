@@ -37,17 +37,22 @@ export type Value =
     | { kind: "Nil"; value: null }
     | { kind: "Fn"; name: string | null; params: string[]; body: Stmt[]; closure: Env; value: null }
     | { kind: "NativeFn"; name: string; arity: Number | null; impl: NativeImpl; value: null }
+    | { kind: "Index"; target: string; index: number; value: null }
+    | { kind: "Array"; value: Value[];}
 
 export type Expr =
     | { kind: "Num"; value: number }
     | { kind: "Str"; value: string }
     | { kind: "Bool"; value: boolean }
+    | { kind: "Array"; value: Expr[] }
     | { kind: "Nil" }
     | { kind: "Ident"; name: string }
     | { kind: "Unary"; op: UnaryOp; rhs: Expr }
     | { kind: "Binary"; op: BinaryOp; lhs: Expr; rhs: Expr }
     | { kind: "Group"; expr: Expr }
-    | { kind: "Call"; callee: Expr; args: Expr[] };
+    | { kind: "Call"; callee: Expr; args: Expr[] }
+    | { kind: "Index"; target: Expr; index: Expr; }
+
 
 export type Stmt =
     | { kind: "Let"; name: string; init: Expr | null }

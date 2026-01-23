@@ -296,6 +296,25 @@ export class Runtime {
             case "Nil":
             return { kind: "Nil", value: null };
 
+            case "Array":
+            return { kind: "Array", value: expr.value.map(x => this.eval(x)) }
+
+            case "Index": {
+                const target = this.eval(expr.target);
+                const indexVal = this.eval(expr.index);
+
+                if (target.kind !== "Array") {
+                    throw new Error(`Indexing non-array: ${target.kind}`);
+                }
+                if (indexVal.kind !== "Num") {
+                    throw new Error(`Array index must be a number, got: ${indexVal.kind}`);
+                }
+
+                const i = Math.trunc(indexVal.value);
+                if (i < 0 || i >= target.value.length) return { kind: "Nil", value: null };
+
+                return target.value[i] ?? { kind: "Nil", value: null };
+            }
 
             case "Ident":
             return this.env.get(expr.name);

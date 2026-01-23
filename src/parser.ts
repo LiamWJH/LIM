@@ -1,4 +1,3 @@
-// parser.ts
 import type { AssignOp, BinaryOp, UnaryOp, Expr, Stmt } from "./ast";
 import type { Token, TokenKind } from "./token";
 import { TK } from "./token";
@@ -16,9 +15,6 @@ export class Parser {
 
   constructor(private readonly tokens: Token[]) {}
 
-  // =========
-  // Program
-  // =========
   parseProgram(): Stmt[] {
     const out: Stmt[] = [];
     while (!this.isAtEnd()) {
@@ -28,14 +24,12 @@ export class Parser {
     return out;
   }
 
-  // =====================
-  // Decls / Statements
-  // =====================
+  // function/let declaration
   private declaration(): Stmt | null {
     try {
       if (this.match(TK.FUNC)) return this.fnDecl();
       if (this.match(TK.LET)) return this.letDecl();
-      return this.statement();
+      return this.statement(); // after declaration -> stmts
     } catch (e) {
       if (e instanceof ParseError) {
         this.errors.push(e);
@@ -46,16 +40,16 @@ export class Parser {
     }
   }
 
+  // if/while/leftbrace
   private statement(): Stmt {
     if (this.match(TK.IF)) return this.ifStmt();
     if (this.match(TK.WHILE)) return this.whileStmt();
     if (this.match(TK.LBRACE)) return this.blockStmtAlreadyOpened();
-    // If you add RETURN later, wire it here.
-    return this.exprOrAssignStmt();
+    return this.exprOrAssignStmt(); // after stmt -> expr/assignops
   }
 
   private letDecl(): Stmt {
-    const nameTok = this.consume(TK.IDENT, "Expected identifier after 'let'.");
+    const name = this.consume(TK.IDENT, "Expected identifier after 'let'.");
     let init: Expr | null = null;
 
     if (this.match(TK.ASSIGN)) {
@@ -63,11 +57,11 @@ export class Parser {
     }
 
     this.consume(TK.SEMICOLON, "Expected ';' after let declaration.");
-    return { kind: "Let", name: nameTok.lexeme, init };
+    return { kind: "Let", name: name.lexeme, init };
   }
 
   private fnDecl(): Stmt {
-    const nameTok = this.consume(TK.IDENT, "Expected function name after 'func'.");
+    const name = this.consume(TK.IDENT, "Expected function name after 'func'.");
 
     this.consume(TK.LPAREN, "Expected '(' after function name.");
     const params: string[] = [];
@@ -79,11 +73,10 @@ export class Parser {
     }
     this.consume(TK.RPAREN, "Expected ')' after parameters.");
 
-    // IMPORTANT: Fn.body should be Stmt[], not a Block Stmt
     this.consume(TK.LBRACE, "Expected '{' before function body.");
-    const body = this.blockStmtsAlreadyOpened(); // ✅ Stmt[]
+    const body = this.blockStmtsAlreadyOpened();
 
-    return { kind: "Fn", name: nameTok.lexeme, params, body };
+    return { kind: "Fn", name: name.lexeme, params, body };
   }
 
   private ifStmt(): Stmt {
@@ -108,19 +101,13 @@ export class Parser {
     return { kind: "While", cond, body };
   }
 
-  // ---------------------
-  // Blocks
-  // ---------------------
-
-  // If you want a "Block" statement (for `{ ... }` in normal code)
-  // Called when we've already consumed '{'
+  // extensive name but describes that the block is already started and { is already eaten 
   private blockStmtAlreadyOpened(): Stmt {
     const stmts = this.blockStmtsAlreadyOpened();
     return { kind: "Block", stmts };
   }
 
-  // The same block parser, but returns the raw Stmt[] (needed for Fn.body)
-  // Called when we've already consumed '{'
+  // the first one was starting point, this parses all the stuff in the block
   private blockStmtsAlreadyOpened(): Stmt[] {
     const stmts: Stmt[] = [];
     while (!this.check(TK.RBRACE) && !this.isAtEnd()) {
@@ -131,17 +118,11 @@ export class Parser {
     return stmts;
   }
 
-  /**
-   * Handles either:
-   *   expr ;
-   * or:
-   *   ident (=|+=|-=|*=|/=) expr ;
-   */
+
   private exprOrAssignStmt(): Stmt {
-    // Lookahead: IDENT followed by assignment-ish token => assignment stmt
     if (this.check(TK.IDENT) && this.peekIsAssignOp()) {
-      const name = this.advance().lexeme; // consume IDENT
-      const opTok = this.advance();       // consume ASSIGN or PLUS_ASSIGN etc
+      const name = this.advance().lexeme;
+      const opTok = this.advance();
       const op = this.assignOpFromToken(opTok);
 
       const value = this.expression();
@@ -178,9 +159,7 @@ export class Parser {
     }
   }
 
-  // =====================
-  // Expressions (ladder)
-  // =====================
+
   private expression(): Expr {
     return this.logicOr();
   }
@@ -277,6 +256,12 @@ export class Parser {
         expr = { kind: "Call", callee: expr, args };
         continue;
       }
+      if (this.match(TK.LBRACKET)) {
+        let idx = this.expression()
+        this.consume(TK.RBRACKET, "Expected ']' after arguments.");
+        expr = { kind: "Index", target: expr,  index: idx };
+        continue;
+      }
       break;
     }
 
@@ -302,12 +287,20 @@ export class Parser {
       return { kind: "Group", expr };
     }
 
+    if (this.match(TK.LBRACKET)) {
+      const value: Expr[] = [];
+      if (!this.check(TK.RBRACKET)) {
+        do {
+          value.push(this.expression());
+        } while (this.match(TK.COMMA));
+      }
+      this.consume(TK.RBRACKET, "Expected ']' after array elements.");
+      return { kind: "Array", value };
+    }
+
     throw this.error(this.current(), "Expected expression.");
   }
 
-  // =====================
-  // Helpers / Error recovery
-  // =====================
   private match(...kinds: TokenKind[]): boolean {
     for (const k of kinds) {
       if (this.check(k)) {
@@ -368,7 +361,7 @@ export class Parser {
         case TK.FUNC:
         case TK.IF:
         case TK.WHILE:
-          return; // ✅ important: stop syncing at a likely statement boundary
+          return;
         default:
           break;
       }
