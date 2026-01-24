@@ -68,5 +68,6 @@ export const KEYWORDS: Record<string, TokenKind> = {
   or: TK.OR,
   not: TK.NOT,
   func: TK.FUNC,
+  return: TK.RETURN,
   export: TK.EXPORT,
 };

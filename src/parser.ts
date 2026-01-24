@@ -1,3 +1,4 @@
+import type { UnderlyingByteSource } from "stream/web";
 import type { AssignOp, BinaryOp, UnaryOp, Expr, Stmt } from "./ast";
 import type { Token, TokenKind } from "./token";
 import { TK } from "./token";
@@ -44,6 +45,7 @@ export class Parser {
   private statement(): Stmt {
     if (this.match(TK.IF)) return this.ifStmt();
     if (this.match(TK.WHILE)) return this.whileStmt();
+    if (this.match(TK.RETURN)) return this.returnStmt();
     if (this.match(TK.LBRACE)) return this.blockStmtAlreadyOpened();
     return this.exprOrAssignStmt(); // after stmt -> expr/assignops
   }
@@ -79,6 +81,17 @@ export class Parser {
     return { kind: "Fn", name: name.lexeme, params, body };
   }
 
+  private returnStmt(): Stmt {
+    let value: Expr | undefined = undefined;
+
+    if (!this.check(TK.SEMICOLON)) {
+      value = this.expression();
+    }
+
+    this.consume(TK.SEMICOLON, "Expected ';' after return.");
+    return { kind: "Return", value };
+  }
+
   private ifStmt(): Stmt {
     this.consume(TK.LPAREN, "Expected '(' after 'if'.");
     const cond = this.expression();
@@ -101,7 +114,7 @@ export class Parser {
     return { kind: "While", cond, body };
   }
 
-  // extensive name but describes that the block is already started and { is already eaten 
+  // extensive name but describes that the block is already started and { is already eaten
   private blockStmtAlreadyOpened(): Stmt {
     const stmts = this.blockStmtsAlreadyOpened();
     return { kind: "Block", stmts };
