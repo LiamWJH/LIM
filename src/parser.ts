@@ -290,6 +290,7 @@ export class Parser {
       const t = this.previous();
       return { kind: "Str", value: String(t.literal ?? t.lexeme) };
     }
+
     if (this.match(TK.IDENT)) {
       return { kind: "Ident", name: this.previous().lexeme };
     }

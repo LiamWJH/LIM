@@ -47,6 +47,7 @@ export class Lexer {
         return this.pos >= this.src.length;
     }
 
+
     private isAlpha(c: string): boolean {
         const n = c.charCodeAt(0);
 

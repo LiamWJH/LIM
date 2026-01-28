@@ -13,6 +13,7 @@ export const TK = {
   NUMBER: "NUMBER",
   STRING: "STRING",
 
+
   EQUAL: "EQUAL",
   NOTEQ: "NOTEQ",
   LT: "LT",

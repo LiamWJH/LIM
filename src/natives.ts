@@ -13,15 +13,20 @@ function asBool(n: Extract<Value, { kind: "Bool" }>): boolean {
 function asNil(n: Extract<Value, { kind: "Nil" }>): null {
     return null
 }
+function asArr(n: Extract<Value, { kind: "Array" }>): any[] {
+    //console.log(n)
+    return n.value.map(asNativeT)
+}
 
-function asNativeT(n: Value): number | string | boolean | null {
+function asNativeT(n: Value): number | string | boolean | any[] | false| true | null {
     switch (n.kind) {
         case "Num": return asNum(n)
         case "Str": return asStr(n)
         case "Bool": return asBool(n)
         case "Nil": return asNil(n)
+        case "Array": return asArr(n)
         default: {
-            throw new Error("'Unexpected type' from inner function 'asNativeT' ");
+            throw new Error(n.kind);
         }
     }
 }

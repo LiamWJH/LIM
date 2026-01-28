@@ -61,6 +61,7 @@ export class Runtime {
     }
 
     run(program: Stmt[]) {
+        //console.log(program)
         for (const stmt of program) this.exec(stmt);
     }
 
@@ -160,7 +161,9 @@ export class Runtime {
         const callEnv = new Env(callee.closure);
 
         for (let i = 0; i < callee.params.length; i++) {
-            callEnv.define(callee.params[i]!, args[i]!);
+            const name = callee.params[i]!;
+            callEnv.define(name, args[i]!);
+
         }
 
 
@@ -181,6 +184,9 @@ export class Runtime {
     private installNatives() {
         this.env.define("print", printFn);
         this.env.define("scan", scanFn);
+        this.env.define("true", { kind: "Bool", value: true});
+        this.env.define("false", { kind: "Bool", value: false});
+        this.env.define("nil", { kind: "Nil", value: null});
     }
 
     private exec(stmt: Stmt) {
@@ -264,9 +270,6 @@ export class Runtime {
             }
 
             case "While": {
-                //console.log(this.isTruthy(this.eval(stmt.cond)));
-                //console.log(this.eval(stmt.cond));
-                //console.log(stmt.cond);
                 while (this.isTruthy(this.eval(stmt.cond))) {
                     this.exec(stmt.body);
                 }
@@ -318,7 +321,6 @@ export class Runtime {
 
             case "Ident":
             return this.env.get(expr.name);
-
 
             case "Group":
             return this.eval(expr.expr);
