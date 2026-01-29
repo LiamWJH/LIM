@@ -2,6 +2,12 @@ import type { TokenKind, Token } from "./token";
 import type { AssignOp, BinaryOp, Expr, Stmt, Program, Value } from "./ast";
 import { printFn, scanFn } from "./natives";
 
+export class InterpError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "InterpError";
+  }
+}
 
 export class Env {
     values = new Map<string, Value>();
@@ -11,6 +17,10 @@ export class Env {
         this.parentenv = parent;
     }
 
+    private error(message: string): InterpError {
+        return new InterpError(message);
+    }
+
     define(name: string, value: Value) {
         this.values.set(name,value);
     }
@@ -18,7 +28,7 @@ export class Env {
     get(name: string): Value {
         if (this.values.has(name)) return this.values.get(name)!;
         if (this.parentenv) return this.parentenv.get(name);
-        throw new Error(`cannot get value for a undefined variable '${name}'`);
+        throw this.error(`cannot get value for a undefined name '${name}'`);
     }
 
     assign(name: string, value: Value) {
@@ -47,11 +57,15 @@ export class Module {
     }
 }
 
+
+
 export class Runtime {
     i = 0;
     globalenv = new Env(null);
     moduleenv: Module;
     env: Env;
+
+    public errors: InterpError[] = [];
 
     constructor() {
         this.globalenv = new Env(null);
@@ -60,9 +74,21 @@ export class Runtime {
         this.installNatives();
     }
 
+    private error(message: string): InterpError {
+        return new InterpError(message);
+    }
+
     run(program: Stmt[]) {
-        //console.log(program)
-        for (const stmt of program) this.exec(stmt);
+        try {
+            for (const stmt of program) this.exec(stmt);
+        } catch(e) {
+            if (e instanceof InterpError) {
+                this.errors.push(e);
+                console.error(`[RuntimeError] ${e.message}`);
+                return;
+            }
+            throw e;
+        }
     }
 
     private toNum(n: number): Value {
@@ -98,28 +124,28 @@ export class Runtime {
         } else if (a.kind === "Num" && b.kind === "Num") {
             return this.toNum(this.asNum(a) + this.asNum(b));
         } else {
-            throw new Error(`addition between '${a}' and '${b}' does not work.`)
+            throw this.error(`addition between '${a}' and '${b}' does not work.`)
         }
     }
     private opSub(a: Value, b: Value): Value {
         if (a.kind === "Num" && b.kind === "Num") {
             return this.toNum(this.asNum(a) - this.asNum(b));
         } else {
-            throw new Error(`subtraction between '${a}' and '${b}' does not work.`)
+            throw this.error(`subtraction between '${a}' and '${b}' does not work.`)
         }
     }
     private opMul(a: Value, b: Value): Value {
         if (a.kind === "Num" && b.kind === "Num") {
             return this.toNum(this.asNum(a) * this.asNum(b));
         } else {
-            throw new Error(`multiplication between '${a}' and '${b}' does not work.`)
+            throw this.error(`multiplication between '${a}' and '${b}' does not work.`)
         }
     }
     private opDiv(a: Value, b: Value): Value {
         if (a.kind === "Num" && b.kind === "Num") {
             return this.toNum(this.asNum(a) / this.asNum(b));
         } else {
-            throw new Error(`division between '${a}' and '${b}' does not work.`)
+            throw this.error(`division between '${a}' and '${b}' does not work.`)
         }
     }
 
@@ -144,16 +170,16 @@ export class Runtime {
     private callValue(callee: Value, args: Value[]): Value {
         if (callee.kind === "NativeFn") {
                 if (callee.arity !== null && args.length !== callee.arity) {
-                    throw new Error(`native ${callee.name} expects ${callee.arity} args`);
+                    throw this.error(`native ${callee.name} expects ${callee.arity} args`);
                 }
             return callee.impl(args);
         }
         if (callee.kind !== "Fn") {
-            throw new Error(`tried to call non-function value: ${callee.kind}`);
+            throw this.error(`tried to call non-function value: ${callee.kind}`);
         }
 
         if (args.length !== callee.params.length) {
-            throw new Error(
+            throw this.error(
             `function ${callee.name ?? "<anon>"} expects ${callee.params.length} args but got ${args.length}`
             );
         }
@@ -281,7 +307,7 @@ export class Runtime {
                 throw new ReturnSignal(val);
             }
 
-            default: { throw new Error("shitty syntax exec error bitch"); }
+            default: { throw this.error("shitty syntax exec error bitch"); }
         }
     }
 
@@ -307,10 +333,10 @@ export class Runtime {
                 const indexVal = this.eval(expr.index);
 
                 if (target.kind !== "Array") {
-                    throw new Error(`Indexing non-array: ${target.kind}`);
+                    throw this.error(`Indexing non-array: ${target.kind}`);
                 }
                 if (indexVal.kind !== "Num") {
-                    throw new Error(`Array index must be a number, got: ${indexVal.kind}`);
+                    throw this.error(`Array index must be a number, got: ${indexVal.kind}`);
                 }
 
                 const i = Math.trunc(indexVal.value);
@@ -336,7 +362,7 @@ export class Runtime {
                         return this.toBool(!rhs);
 
                     default:
-                        throw new Error(`Unknown unary operator`);
+                        throw this.error(`Unknown unary operator`);
                 }
             }
 
@@ -365,18 +391,18 @@ export class Runtime {
 
                     case "LT":
                         if (left.kind === right.kind) return this.toBool(left.value! < right.value!);
-                        else throw new Error("Tried to compare with different types");
+                        else throw this.error("Tried to compare with different types");
                     case "LTE":
                         if (left.kind === right.kind) return this.toBool(left.value! <= right.value!);
-                        else throw new Error("Tried to compare with different types");
+                        else throw this.error("Tried to compare with different types");
                     case "GT":
                         if (left.kind === right.kind) return this.toBool(left.value! > right.value!);
-                        else throw new Error("Tried to compare with different types");
+                        else throw this.error("Tried to compare with different types");
                     case "GTE":
                         if (left.kind === right.kind) return this.toBool(left.value! >= right.value!);
-                        else throw new Error("Tried to compare with different types");
+                        else throw this.error("Tried to compare with different types");
                     default:
-                        throw new Error(`Unknown binary operator ${expr.op}`);
+                        throw this.error(`Unknown binary operator ${expr.op}`);
                 }
             }
 

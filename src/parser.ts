@@ -2,6 +2,7 @@ import type { UnderlyingByteSource } from "stream/web";
 import type { AssignOp, BinaryOp, UnaryOp, Expr, Stmt } from "./ast";
 import type { Token, TokenKind } from "./token";
 import { TK } from "./token";
+import { stringify } from "querystring";
 
 export class ParseError extends Error {
   constructor(public token: Token, message: string) {
@@ -43,6 +44,10 @@ export class Parser {
 
   // if/while/leftbrace
   private statement(): Stmt {
+    if (this.check(TK.RBRACE)) {
+      throw this.error(this.current(), "Unexpected '}' (unmatched closing brace).");
+    }
+    
     if (this.match(TK.IF)) return this.ifStmt();
     if (this.match(TK.WHILE)) return this.whileStmt();
     if (this.match(TK.RETURN)) return this.returnStmt();
@@ -133,17 +138,33 @@ export class Parser {
 
 
   private exprOrAssignStmt(): Stmt {
+    let name: Token = {kind:"IDENT", lexeme: ""};
     if (this.check(TK.IDENT) && this.peekIsAssignOp()) {
-      const name = this.advance().lexeme;
+      name = this.advance();
       const opTok = this.advance();
       const op = this.assignOpFromToken(opTok);
 
       const value = this.expression();
       this.consume(TK.SEMICOLON, "Expected ';' after assignment.");
-      return { kind: "Assign", name, op, value };
+      return { kind: "Assign", name: name.lexeme, op, value };
     }
 
     const expr = this.expression();
+
+    if (this.check(TK.LBRACE)) {
+      if (expr.kind === "Call" && expr.callee.kind === "Ident") {
+        throw this.error(
+          this.current(),
+          `'${expr.callee.name}' is not a valid keyword. Blocks only follow 'if', 'while', or 'func'.`
+        );
+      }
+
+      throw this.error(
+        this.current(),
+        "Unexpected '{' after expression."
+      );
+    }
+
     this.consume(TK.SEMICOLON, "Expected ';' after expression.");
     return { kind: "ExprStmt", expr };
   }

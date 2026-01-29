@@ -30,8 +30,33 @@ if (!args[0]) {
     let slimParser = new Parser(slimTokens);
     let slimAst = slimParser.parseProgram();
 
+    if (slimParser.errors.length) {
+        for (const err of slimParser.errors) {
+            console.error(`[Code Pattern Error] ${err.message} at word type ${err.token.kind}, word ${err.token.lexeme}`);
+        }
+        process.exit(1);
+    }
 
-
+    /**
+    console.log("TOKENS:");
+    console.log(
+    util.inspect(slimTokens, {
+        depth: null,          // ← no recursion limit
+        colors: true,
+        maxArrayLength: null,
+        breakLength: 120,
+    })
+    );
+    console.log("AST:");
+    console.log(
+    util.inspect(slimAst, {
+        depth: null,          // ← no recursion limit
+        colors: true,
+        maxArrayLength: null,
+        breakLength: 120,
+    })
+    );
+     */
 
 
     let slimRuntime = new Runtime();
