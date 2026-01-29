@@ -32,7 +32,7 @@ if (!args[0]) {
 
     if (limParser.errors.length) {
         for (const err of limParser.errors) {
-            console.error(`[Code Pattern Error] ${err.message} at word type ${err.token.kind}, word ${err.token.lexeme}`);
+            console.error(`[Code Pattern Error] ${err.message} at word type ${err.token.kind}, word '${err.token.lexeme}'`);
         }
         process.exit(1);
     }
@@ -41,7 +41,7 @@ if (!args[0]) {
     console.log("TOKENS:");
     console.log(
     util.inspect(slimTokens, {
-        depth: null,          // ← no recursion limit
+        depth: null,          // ← no recursion limit <
         colors: true,
         maxArrayLength: null,
         breakLength: 120,
