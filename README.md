@@ -41,4 +41,7 @@ bun run lim.ts foo.lim
 
 4. _Node feels bloat, its a fact_
 
+
+---
+## repository insights
 ![Alt](https://repobeats.axiom.co/api/embed/a8b2c51386e76eb44df19599b0c051a51351683d.svg "Repobeats analytics image")
