@@ -1,5 +1,4 @@
 # LIM
-## _" Modern prototyping should be fast. "_
 ### OPEN TO CONTRIBUTORS!
 
 ___
