@@ -1,3 +1,5 @@
+# Stdlib.md - an intuitive guide to use the standard library
+
 ## print()
 ### usage
 takes in unlimited amount of arguments that will be printed with a newline character.

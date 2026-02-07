@@ -1,3 +1,5 @@
+# elite_knowledge_ball.md - an guide to understand the language internal
+
 ## /lexer
 contains lexer.ts and token.ts
 ### lexer.ts
@@ -18,3 +20,9 @@ contains interp.ts and natives.ts
 gets an array containing the AST and interprets the array into outputs
 ### native.ts
 stores all the standard libarary function
+
+## lim.ts && repl.ts
+### lim.ts
+a central driver for the lexer, parser, runtime
+### repl.ts
+not developed yet, will serve as a repl later on

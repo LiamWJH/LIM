@@ -1,3 +1,5 @@
+# Syntax.md - an intuitive guide to use the language
+
 ## Introduction
 LIM is a dynamically & strongly typed programming langiage designed for prototyping softwares fast.
 
