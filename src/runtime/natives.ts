@@ -153,6 +153,25 @@ export const appendFn = {
   },
 } satisfies Extract<Value, { kind: "NativeFn" }>;
 
+export const removeFn = {
+  value: null,
+  kind: "NativeFn",
+  name: "delete",
+  arity: 2,
+  impl: (args: Value[]) => {
+    if (args.length !== 2) throw new Error("'delete' expects 2 arguments");
+    const arr = args[0]!;
+    const index = args[1]!;
+
+    if (!(arr!.kind === "Array" || arr!.kind === "Str")) throw new Error("'delete' needs an array or string for the first argument");
+    if (index!.kind !== "Num") throw new Error("'delete' needs a number for the second argument");
+
+    if (arr!.kind === "Array") return { kind: "Array", value: arr!.value!.splice(index.value, 1)};
+    else return  { kind: "Str", value: arr!.value.slice(0, index.value) + arr!.value.slice(index.value + 1)};
+
+  },
+} satisfies Extract<Value, { kind: "NativeFn" }>;
+
 
 /**
  * TODO: Add methd(a.x(b)), it should compile down to x(a,b)

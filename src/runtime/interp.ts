@@ -1,6 +1,6 @@
 import type { TokenKind, Token } from "../lexer/token";
 import type { AssignOp, BinaryOp, Expr, Stmt, Program, Value } from "../parser/ast";
-import { printFn, scanFn, lenFn, smallestFn, biggestFn, appendFn } from "./natives";
+import { printFn, scanFn, lenFn, smallestFn, biggestFn, appendFn, removeFn } from "./natives";
 
 export class InterpError extends Error {
   constructor(message: string) {
@@ -214,6 +214,7 @@ export class Runtime {
         this.env.define("smallest", smallestFn);
         this.env.define("biggest", biggestFn);
         this.env.define("append", appendFn);
+        this.env.define("remove", removeFn);
 
         this.env.define("true", { kind: "Bool", value: true});
         this.env.define("false", { kind: "Bool", value: false});
