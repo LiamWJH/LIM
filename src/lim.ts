@@ -27,9 +27,16 @@ if (!args[0]) {
     let limLexer = new Lexer(src);
     let limTokens = limLexer.lex();
 
+
     let limParser = new Parser(limTokens);
     let limAst = limParser.parseProgram();
-
+    console.log(
+        util.inspect(limAst, {
+            depth: null,          // ← no recursion limit
+            colors: true,
+            maxArrayLength: null,
+            breakLength: 120,
+    }));
     if (limParser.errors.length) {
         for (const err of limParser.errors) {
             console.error(`[Code Pattern Error] ${err.message} at word type ${err.token.kind}, word '${err.token.lexeme}'`);
@@ -37,26 +44,24 @@ if (!args[0]) {
         process.exit(1);
     }
 
-    /**
+/**
     console.log("TOKENS:");
     console.log(
-    util.inspect(slimTokens, {
+    util.inspect(limTokens, {
         depth: null,          // ← no recursion limit <
         colors: true,
         maxArrayLength: null,
         breakLength: 120,
-    })
-    );
-    console.log("AST:");
+    }));
+    console.log("AST:")
     console.log(
-    util.inspect(slimAst, {
+    util.inspect(limAst, {
         depth: null,          // ← no recursion limit
         colors: true,
         maxArrayLength: null,
         breakLength: 120,
-    })
-    );
-     */
+    }));
+*/
 
 
     let limRuntime = new Runtime();

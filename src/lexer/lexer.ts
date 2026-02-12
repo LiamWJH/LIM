@@ -386,7 +386,7 @@ export class Lexer {
 
                 let _buf = parts.join("");
 
-                out.push({kind: "COMMENT", lexeme: _buf})
+                //out.push({kind: "COMMENT", lexeme: _buf}) -> removed cuh comment does not need to exist in AST
             }
         }
         out.push({ kind:"EOF", lexeme: "EOF" });

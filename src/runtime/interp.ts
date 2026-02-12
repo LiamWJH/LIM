@@ -292,8 +292,18 @@ export class Runtime {
 
                 if (this.isTruthy(condVal)) {
                     this.exec(stmt.then);
-                } else if (stmt.otherwise) {
-                    this.exec(stmt.otherwise);
+                    return;
+                }
+
+                for (const branch of stmt.elifs) {
+                    if (this.isTruthy(this.eval(branch.cond))) {
+                        this.exec(branch.then);
+                        return;
+                    }
+                }
+
+                if (stmt.elsewise) {
+                    this.exec(stmt.elsewise);
                 }
 
                 return;
@@ -336,7 +346,7 @@ export class Runtime {
                 const target = this.eval(expr.target);
                 const indexVal = this.eval(expr.index);
 
-                if (target.kind !== "Array") {
+                if (!(target.kind === "Array" || target.kind === "Str")) {
                     throw this.error(`Indexing non-array: ${target.kind}`);
                 }
                 if (indexVal.kind !== "Num") {
@@ -346,7 +356,8 @@ export class Runtime {
                 const i = Math.trunc(indexVal.value);
                 if (i < 0 || i >= target.value.length) return { kind: "Nil", value: null };
 
-                return target.value[i] ?? { kind: "Nil", value: null };
+                if (typeof target.value[i] === "string") return { kind: "Str", value: target.value[i]};
+                else return target.value[i] ?? { kind: "Nil", value: null };
             }
 
             case "Ident":

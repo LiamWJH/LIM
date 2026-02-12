@@ -103,13 +103,25 @@ export class Parser {
     this.consume(TK.RPAREN, "Expected ')' after condition.");
 
     const then = this.statement();
-    let otherwise: Stmt | undefined = undefined;
-    if (this.match(TK.ELSE)) {
-      otherwise = this.statement();
+
+    const elifs: { cond: Expr; then: Stmt }[] = [];
+
+    while (this.match(TK.ELIF)) {
+      this.consume(TK.LPAREN, "Expected '(' after 'elif'.");
+      const econd = this.expression();
+      this.consume(TK.RPAREN, "Expected ')' after condition.");
+      const ethen = this.statement();
+      elifs.push({ cond: econd, then: ethen });
     }
 
-    return { kind: "If", cond, then, otherwise };
+    let elsewise: Stmt | undefined = undefined;
+    if (this.match(TK.ELSE)) {
+      elsewise = this.statement();
+    }
+
+    return { kind: "If", cond, then, elifs, elsewise };
   }
+
 
   private whileStmt(): Stmt {
     this.consume(TK.LPAREN, "Expected '(' after 'while'.");

@@ -26,6 +26,7 @@ export type UnaryOp =
     | "NOT"
     | "MINUS";
 
+export type Ifbranch = { cond: Expr; then: Stmt };
 
 export type NativeImpl = (args: Value[]) => Value;
 
@@ -59,7 +60,7 @@ export type Stmt =
     | { kind: "Assign"; name: string; op: AssignOp; value: Expr }
     | { kind: "ExprStmt"; expr: Expr }
     | { kind: "Block"; stmts: Stmt[] }
-    | { kind: "If"; cond: Expr; then: Stmt; otherwise?: Stmt }
+    | { kind: "If"; cond: Expr; then: Stmt; elifs: Ifbranch[], elsewise?: Stmt }
     | { kind: "While"; cond: Expr; body: Stmt }
     | { kind: "Fn"; name: string | null; params: string[]; body: Stmt[] }
     | { kind: "Return"; value?: Expr }

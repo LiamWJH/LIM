@@ -7,6 +7,7 @@ export const TK = {
   EXPORT: "EXPORT",
   WHILE: "WHILE",
   IF: "IF",
+  ELIF: "ELIF",
   ELSE: "ELSE",
 
   IDENT: "IDENT",
@@ -63,6 +64,7 @@ export type Token = {
 export const KEYWORDS: Record<string, TokenKind> = {
   let: TK.LET,
   if: TK.IF,
+  elif: TK.ELIF,
   else: TK.ELSE,
   while: TK.WHILE,
   and: TK.AND,
