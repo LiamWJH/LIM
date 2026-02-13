@@ -239,21 +239,35 @@ export class Parser {
     return expr;
   }
 
-  private comparison(): Expr {
+  private range(): Expr {
     let expr = this.term();
+
+    while (this.match(TK.RANGE)) {
+      const rhs = this.term();
+
+      expr = { kind: "Binary", op: "RANGE", lhs: expr, rhs };
+    }
+
+    return expr;
+  }
+
+
+  private comparison(): Expr {
+    let expr = this.range();
     while (this.match(TK.LT, TK.LTE, TK.GT, TK.GTE)) {
       const opTok = this.previous();
-      const rhs = this.term();
+      const rhs = this.range();
       const op =
         (opTok.kind === TK.LT ? "LT" :
-         opTok.kind === TK.LTE ? "LTE" :
-         opTok.kind === TK.GT ? "GT" :
-         "GTE") as unknown as BinaryOp;
+        opTok.kind === TK.LTE ? "LTE" :
+        opTok.kind === TK.GT ? "GT" :
+        "GTE") as unknown as BinaryOp;
 
       expr = { kind: "Binary", op, lhs: expr, rhs };
     }
     return expr;
   }
+
 
   private term(): Expr {
     let expr = this.factor();

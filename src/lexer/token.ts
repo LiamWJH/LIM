@@ -27,6 +27,7 @@ export const TK = {
   MINUS: "MINUS",
   STAR: "STAR",
   SLASH: "SLASH",
+  RANGE: "RANGE",
 
   PLUS_ASSIGN: "PLUS_ASSIGN",
   MINUS_ASSIGN: "MINUS_ASSIGN",

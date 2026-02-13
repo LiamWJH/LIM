@@ -363,7 +363,10 @@ export class Lexer {
 
             if (ch === ",") out.push({kind: "COMMA", lexeme: ","});
 
-            if (ch === ".") out.push({kind: "DOT", lexeme: "."});
+            if (ch === ".") {
+                if (this.peek() === ".") {out.push({kind: "RANGE", lexeme: ".."}); this.advance();}
+                else {out.push({kind:"DOT", lexeme: "."});}
+            }
 
             if (ch === ";") out.push({kind: "SEMICOLON", lexeme: ";"});
             if (ch === ":") out.push({kind: "COLON", lexeme: ":"});

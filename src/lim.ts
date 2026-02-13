@@ -31,7 +31,7 @@ if (!args[0]) {
     let limParser = new Parser(limTokens);
     let limAst = limParser.parseProgram();
     console.log(
-        util.inspect(limAst, {
+        util.inspect(limTokens, {
             depth: null,          // ← no recursion limit
             colors: true,
             maxArrayLength: null,

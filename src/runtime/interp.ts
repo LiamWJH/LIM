@@ -417,6 +417,24 @@ export class Runtime {
                     case "GTE":
                         if (left.kind === right.kind) return this.toBool(left.value! >= right.value!);
                         else throw this.error("Tried to compare with different types");
+                    case "RANGE": {
+                        if (left.kind !== "Num" || right.kind !== "Num") {
+                            throw this.error("range '..' expects two numbers");
+                        }
+
+                        const start = Math.trunc(left.value);
+                        const end = Math.trunc(right.value);
+
+                        const out: Value[] = [];
+                        const step = start <= end ? 1 : -1;
+
+                        for (let i = start; step > 0 ? i <= end : i >= end; i += step) {
+                            out.push({ kind: "Num", value: i });
+                        }
+
+                        return { kind: "Array", value: out };
+                    }
+
                     default:
                         throw this.error(`Unknown binary operator ${expr.op}`);
                 }

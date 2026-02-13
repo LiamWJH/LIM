@@ -20,7 +20,8 @@ export type BinaryOp =
     | "PLUS"
     | "MINUS"
     | "STAR"
-    | "SLASH";
+    | "SLASH"
+    | "RANGE"
 
 export type UnaryOp =
     | "NOT"
@@ -53,7 +54,6 @@ export type Expr =
     | { kind: "Group"; expr: Expr }
     | { kind: "Call"; callee: Expr; args: Expr[] }
     | { kind: "Index"; target: Expr; index: Expr; }
-
 
 export type Stmt =
     | { kind: "Let"; name: string; init: Expr | null }
