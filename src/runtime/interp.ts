@@ -434,21 +434,20 @@ export class Runtime {
 
                         return { kind: "Array", value: out };
                     }
+                    case "OR": {
+                        const left = this.eval(expr.lhs);
+                        if (this.isTruthy(left)) return this.toBool(true);
+                        const right = this.eval(expr.rhs);
+                        return this.toBool(this.isTruthy(right));
+                    }
 
                     case "AND": {
                         const left = this.eval(expr.lhs);
                         if (!this.isTruthy(left)) return this.toBool(false);
-
                         const right = this.eval(expr.rhs);
                         return this.toBool(this.isTruthy(right));
                     }
-                    case "OR": {
-                        const left = this.eval(expr.lhs);
-                        if (this.isTruthy(left)) return this.toBool(false);
 
-                        const right = this.eval(expr.rhs);
-                        return this.toBool(this.isTruthy(right));
-                    }
 
                     default:
                         throw this.error(`Unknown binary operator ${expr}`);
