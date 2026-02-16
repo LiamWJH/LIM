@@ -30,13 +30,13 @@ if (!args[0]) {
 
     let limParser = new Parser(limTokens);
     let limAst = limParser.parseProgram();
-    console.log(
-        util.inspect(limTokens, {
-            depth: null,          // ← no recursion limit
-            colors: true,
-            maxArrayLength: null,
-            breakLength: 120,
-    }));
+    // console.log(
+    //     util.inspect(limTokens, {
+    //         depth: null,          // ← no recursion limit
+    //         colors: true,
+    //         maxArrayLength: null,
+    //         breakLength: 120,
+    // }));
     if (limParser.errors.length) {
         for (const err of limParser.errors) {
             console.error(`[Code Pattern Error] ${err.message} at word type ${err.token.kind}, word '${err.token.lexeme}'`);
