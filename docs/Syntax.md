@@ -160,10 +160,16 @@ while (i < 10) {
 ```
 Also very intuitive, one thing to note is that the `for` loop does not exist here as it is replaceable with `while`.
 
-### And & OR & NOT
-
-### NOTE!
-BUGGED feature is all under-developed. Lacks parser/runtime support! If you want to help fix this, make a pull request :D
+### And/Or & |
+```lim
+if (2 < 3 & 4 == 4) {
+    print("math!");
+}
+if (2 > 3 | 4 == 4) {
+    print("runs anyways");
+}
+```
+One thing to note is that in lim the 'and' and 'or' operator is replaced with a single character.
 
 ### Func
 ```lim
