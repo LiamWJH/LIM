@@ -35,3 +35,8 @@ Number
 takes in two arguments each being an Array, and any item. Which then returns an Array with the item appended to the Array.
 ### param types
 (1)Array (2)All types
+## remove()
+### usage
+takes in two arguments each being an Array, and a index. Which then returns an Array with the item in the index removed.
+### param types
+(1)Array (2)Number
