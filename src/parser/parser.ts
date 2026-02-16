@@ -214,7 +214,7 @@ export class Parser {
     let expr = this.logicAnd();
     while (this.match(TK.OR)) {
       const rhs = this.logicAnd();
-      expr = { kind: "Binary", op: "OR" as unknown as BinaryOp, lhs: expr, rhs };
+      expr = { kind: "Binary", op: "OR", lhs: expr, rhs };
     }
     return expr;
   }
@@ -223,7 +223,7 @@ export class Parser {
     let expr = this.equality();
     while (this.match(TK.AND)) {
       const rhs = this.equality();
-      expr = { kind: "Binary", op: "AND" as unknown as BinaryOp, lhs: expr, rhs };
+      expr = { kind: "Binary", op: "AND", lhs: expr, rhs };
     }
     return expr;
   }

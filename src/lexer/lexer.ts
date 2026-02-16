@@ -371,7 +371,8 @@ export class Lexer {
             if (ch === ";") out.push({kind: "SEMICOLON", lexeme: ";"});
             if (ch === ":") out.push({kind: "COLON", lexeme: ":"});
 
-            // if (ch === "|") out.push({kind: "SEMICOLON", lexeme: ";"}); ADD LATER
+            if (ch === "|") out.push({kind: "OR", lexeme: "|"});
+            if (ch === "&") out.push({kind: "AND", lexeme: "&"});
 
 
             if (ch == "#") {
