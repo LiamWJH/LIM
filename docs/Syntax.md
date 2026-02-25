@@ -171,6 +171,21 @@ if (2 > 3 | 4 == 4) {
 ```
 One thing to note is that in lim the 'and' and 'or' operator is replaced with a single character.
 
+### Range operator
+```lim
+print(1..2);
+```
+
+Returns an array with numbers from the first value to the second,
+
+### Slices
+```lim
+let arr = ["a", "b", "c"];
+print(arr[0..1]);
+```
+
+The slice can be represented by using the range operator. The first value is the start index, and the last is the end index.
+
 ### Func
 ```lim
 func add(a,b) {
