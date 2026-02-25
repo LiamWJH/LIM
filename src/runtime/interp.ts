@@ -343,23 +343,70 @@ export class Runtime {
             case "Array":
             return { kind: "Array", value: expr.value.map(x => this.eval(x)) }
 
-            case "Index": {
-                const target = this.eval(expr.target);
-                const indexVal = this.eval(expr.index);
+    case "Index": {
+        const target = this.eval(expr.target);
+        const indexVal = this.eval(expr.index);
 
-                if (!(target.kind === "Array" || target.kind === "Str")) {
-                    throw this.error(`Indexing non-array: ${target.kind}`);
-                }
-                if (indexVal.kind !== "Num") {
-                    throw this.error(`Array index must be a number, got: ${indexVal.kind}`);
-                }
+        if (!(target.kind === "Array" || target.kind === "Str")) {
+            throw this.error(`Indexing non-array/string: ${target.kind}`);
+        }
 
-                const i = Math.trunc(indexVal.value);
-                if (i < 0 || i >= target.value.length) return { kind: "Nil", value: null };
+        if (!(indexVal.kind === "Num" || indexVal.kind === "Array")) {
+            throw this.error(`Index must be a number or range-array, got: ${indexVal.kind}`);
+        }
 
-                if (typeof target.value[i] === "string") return { kind: "Str", value: target.value[i]};
-                else return target.value[i] ?? { kind: "Nil", value: null };
+        const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
+
+        if (indexVal.kind === "Array") {
+            if (indexVal.value.length === 0) {
+            return target.kind === "Array"
+                ? { kind: "Array", value: [] }
+                : { kind: "Str", value: "" };
             }
+
+            const first = indexVal.value[0];
+            const last = indexVal.value[indexVal.value.length - 1];
+
+            if (!first || !last || first.kind !== "Num" || last.kind !== "Num") {
+            throw this.error("Slice index array must start/end with numbers");
+            }
+
+            let start = Math.trunc(first.value);
+            let end = Math.trunc(last.value);
+
+            if (target.kind === "Array") {
+            const max = target.value.length - 1;
+            start = clamp(start, 0, Math.max(0, max));
+            end = clamp(end, 0, Math.max(0, max));
+
+            if (start > end) return { kind: "Array", value: [] };
+
+            return { kind: "Array", value: target.value.slice(start, end + 1) };
+            }
+
+            const max = target.value.length - 1;
+            start = clamp(start, 0, Math.max(0, max));
+            end = clamp(end, 0, Math.max(0, max));
+
+            if (start > end) return { kind: "Str", value: "" };
+
+            return { kind: "Str", value: target.value.slice(start, end + 1) };
+        }
+
+        // =========================
+        // Single index: target[n]
+        // =========================
+        const i = Math.trunc(indexVal.value);
+
+        if (target.kind === "Array") {
+            if (i < 0 || i >= target.value.length) return { kind: "Nil", value: null };
+            return target.value[i] ?? { kind: "Nil", value: null };
+        }
+
+        // target.kind === "Str"
+        if (i < 0 || i >= target.value.length) return { kind: "Nil", value: null };
+        return { kind: "Str", value: target.value[i]! };
+    }
 
             case "Ident":
             return this.env.get(expr.name);
