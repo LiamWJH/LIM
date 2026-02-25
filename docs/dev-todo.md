@@ -8,6 +8,7 @@ The number type currently does not tolerate `_` between integers!  If you want t
 feature is all under-developed. Lacks parser/runtime support! If you want to help fix this, make a pull request :D
 
 ### NOTE!
-Index does not support slices in the current moment.
+import statement does not exist.
+
 
 ### Implement bytecode for speed.(register or not?)
