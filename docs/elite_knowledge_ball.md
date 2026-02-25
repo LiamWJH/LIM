@@ -1,4 +1,4 @@
-# elite_knowledge_ball.md - an guide to understand the language internal
+# elite_knowledge_ball.md - a guide to understand the language internal
 
 ## /lexer
 contains lexer.ts and token.ts
