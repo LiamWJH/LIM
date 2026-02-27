@@ -1,1 +1,1 @@
-# Exmaples.md - a bundle of sophisticated examples to test/try the language
+# Examples.md - a bundle of sophisticated examples to test/try the language
