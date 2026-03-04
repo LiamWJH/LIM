@@ -1,0 +1,5 @@
+let name = scan("Enter your name: ");
+# this is a comment #
+## this is a 
+multi-line comment ##
+print("Hello", name);

@@ -376,21 +376,27 @@ export class Lexer {
 
 
             if (ch == "#") {
-                let i = this.pos;
-                const parts: string[] = [];
+                if (this.peek() == "#") {
+                    this.advance();
 
-                while (!this.isAtEnd()) {
-                    const c = this.advance();
-                    if (!(c === "#")) {
-                        parts.push(c);
-                    } else {
-                        break;
+                    while (!this.isAtEnd()) {
+                        if (this.peek() === "#" && this.peekN(1) === "#") {
+                            this.advance();
+                            this.advance();
+                            break;
+                        }
+                        this.advance();
                     }
+                    continue;
                 }
 
-                let _buf = parts.join("");
-
-                //out.push({kind: "COMMENT", lexeme: _buf}) -> removed cuh comment does not need to exist in AST
+                while (!this.isAtEnd() && this.peek() !== "#") {
+                    this.advance();
+                }
+                if (!this.isAtEnd()) {
+                    this.advance();
+                }
+                continue;
             }
         }
         out.push({ kind:"EOF", lexeme: "EOF" });
